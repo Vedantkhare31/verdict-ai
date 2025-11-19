@@ -6,6 +6,8 @@
     <title>Verdict AI - Legal Advisor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root {
             --primary: #1a365d;
@@ -186,6 +188,18 @@
             font-size: 18px;
             font-weight: bold;
             height: 50px;
+            border: 2px solid #e1e4e8;
+            transition: var(--transition);
+        }
+
+        .otp-input:focus {
+            border-color: var(--accent1);
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.2);
+        }
+
+        .otp-input.filled {
+            border-color: var(--success);
+            background-color: #f0fff4;
         }
 
         .otp-display {
@@ -704,17 +718,17 @@
                 <div class="form-group">
                     <p>We've sent a verification code to your email</p>
                     <div class="otp-display">
-                        <h4>Demo OTP (In a real app, this would be sent to your email):</h4>
-                        <div class="otp-code" id="demoOTP">123456</div>
+                        <h4>Check your email for the OTP code</h4>
+                        <p>If you don't see it, check your spam folder</p>
                     </div>
                     <p>Enter the 6-digit verification code:</p>
                     <div class="otp-container">
-                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 1)" onkeydown="handleOTPBackspace(event, 0)">
-                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 2)" onkeydown="handleOTPBackspace(event, 1)">
-                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 3)" onkeydown="handleOTPBackspace(event, 2)">
-                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 4)" onkeydown="handleOTPBackspace(event, 3)">
-                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 5)" onkeydown="handleOTPBackspace(event, 4)">
-                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 6)" onkeydown="handleOTPBackspace(event, 5)">
+                        <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 0)" onkeydown="handleOTPKeydown(event, 0)" onfocus="this.select()">
+                        <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 1)" onkeydown="handleOTPKeydown(event, 1)" onfocus="this.select()">
+                        <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 2)" onkeydown="handleOTPKeydown(event, 2)" onfocus="this.select()">
+                        <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 3)" onkeydown="handleOTPKeydown(event, 3)" onfocus="this.select()">
+                        <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 4)" onkeydown="handleOTPKeydown(event, 4)" onfocus="this.select()">
+                        <input type="text" class="otp-input" maxlength="1" oninput="handleOTPInput(this, 5)" onkeydown="handleOTPKeydown(event, 5)" onfocus="this.select()">
                     </div>
                 </div>
                 <button onclick="verifyOTP()" class="btn btn-primary">Verify OTP</button>
@@ -867,12 +881,27 @@
     </div>
 
     <script>
+        // ===== EMAILJS CONFIGURATION =====
+        // Replace these with your actual EmailJS credentials
+        const EMAILJS_CONFIG = {
+            SERVICE_ID: "verdict_31", // Replace with your EmailJS Service ID
+            OTP_TEMPLATE_ID: "template_u828yq8", // Your OTP template ID
+            PASSWORD_RESET_TEMPLATE_ID: "template_83q2gtl", // Your Password Reset template ID
+            USER_ID: "cgM6VyGsyHIjR1rO6" // Replace with your EmailJS Public Key (User ID)
+        };
+
+        // Initialize EmailJS
+        (function() {
+            emailjs.init(EMAILJS_CONFIG.USER_ID);
+        })();
+
         // -------- GLOBAL VARIABLES --------
         const API_KEY = "AIzaSyCUxUuVG4OvuHXhC6U6Uj2RbJIdWRUiL9U";
         const MODEL = "models/gemini-2.0-flash";
         
         let currentUser = null;
         let generatedOTP = null;
+        let userEmail = null;
 
         // DOM Elements
         const loginScreen = document.getElementById('loginScreen');
@@ -890,11 +919,112 @@
         const userRole = document.getElementById('userRole');
         const screens = document.querySelectorAll('.screen');
         const caseHistoryContainer = document.getElementById('caseHistoryContainer');
-        const demoOTP = document.getElementById('demoOTP');
 
         // Check if user is logged in
         if (localStorage.getItem('loggedInUser')) {
             showApp();
+        }
+
+        // ===== IMPROVED OTP INPUT HANDLING =====
+        function handleOTPInput(current, index) {
+            const value = current.value;
+            
+            // Only allow numbers
+            if (value && !/^\d$/.test(value)) {
+                current.value = '';
+                return;
+            }
+            
+            // Update filled class
+            if (value) {
+                current.classList.add('filled');
+            } else {
+                current.classList.remove('filled');
+            }
+            
+            // Auto-focus next input if value is entered
+            if (value && index < 5) {
+                const nextInput = document.querySelectorAll('.otp-input')[index + 1];
+                nextInput.focus();
+                nextInput.select();
+            }
+            
+            // Auto-focus previous input if backspace on empty field
+            if (!value && index > 0) {
+                const prevInput = document.querySelectorAll('.otp-input')[index - 1];
+                prevInput.focus();
+                prevInput.select();
+            }
+        }
+
+        function handleOTPKeydown(event, index) {
+            const inputs = document.querySelectorAll('.otp-input');
+            
+            // Handle backspace
+            if (event.key === 'Backspace') {
+                if (inputs[index].value === '' && index > 0) {
+                    // If current is empty, move to previous and clear it
+                    inputs[index - 1].focus();
+                    inputs[index - 1].select();
+                } else {
+                    // If current has value, clear it but stay there
+                    inputs[index].value = '';
+                    inputs[index].classList.remove('filled');
+                }
+                event.preventDefault();
+            }
+            
+            // Handle arrow keys for navigation
+            else if (event.key === 'ArrowLeft' && index > 0) {
+                inputs[index - 1].focus();
+                inputs[index - 1].select();
+                event.preventDefault();
+            }
+            else if (event.key === 'ArrowRight' && index < 5) {
+                inputs[index + 1].focus();
+                inputs[index + 1].select();
+                event.preventDefault();
+            }
+            
+            // Handle paste
+            else if (event.key === 'v' && (event.ctrlKey || event.metaKey)) {
+                setTimeout(() => {
+                    handleOTPPaste(inputs[index]);
+                }, 10);
+            }
+        }
+
+        function handleOTPPaste(startInput) {
+            const inputs = document.querySelectorAll('.otp-input');
+            navigator.clipboard.readText().then(pastedText => {
+                const numbers = pastedText.replace(/\D/g, '').slice(0, 6);
+                
+                numbers.split('').forEach((num, index) => {
+                    if (inputs[index]) {
+                        inputs[index].value = num;
+                        inputs[index].classList.add('filled');
+                    }
+                });
+                
+                // Focus the next empty input or the last one
+                const emptyIndex = numbers.length < 6 ? numbers.length : 5;
+                if (inputs[emptyIndex]) {
+                    inputs[emptyIndex].focus();
+                    inputs[emptyIndex].select();
+                }
+            });
+        }
+
+        function clearOTPInputs() {
+            const inputs = document.querySelectorAll('.otp-input');
+            inputs.forEach(input => {
+                input.value = '';
+                input.classList.remove('filled');
+            });
+            // Focus first input
+            if (inputs[0]) {
+                inputs[0].focus();
+            }
         }
         
         // Create account function
@@ -939,15 +1069,13 @@
             if (userData) {
                 const user = JSON.parse(userData);
                 if (user.password === password) {
-                    // Generate and send OTP (simulated)
+                    // Generate and send OTP
                     generatedOTP = generateOTP();
                     currentUser = username;
+                    userEmail = user.email;
                     
-                    // Display OTP for demo purposes
-                    demoOTP.textContent = generatedOTP;
-                    
-                    // Show OTP verification screen
-                    showOTPVerification();
+                    // Send OTP to email using EmailJS
+                    sendOTPToEmail(userEmail, generatedOTP, username);
                 } else {
                     showMessage(authMessage, 'Invalid username or password!', 'error');
                 }
@@ -961,6 +1089,50 @@
             return Math.floor(100000 + Math.random() * 900000).toString();
         }
         
+        // Send OTP to email using EmailJS
+        async function sendOTPToEmail(email, otp, username) {
+            try {
+                // Show loading state
+                showMessage(authMessage, 'Sending OTP to your email...', 'info');
+                
+                // ✅ WORKING PARAMETER STRUCTURE - Try different parameter names
+                const templateParams = {
+                    email: email,                    // Main recipient parameter
+                    user_email: email,               // Alternative parameter
+                    to_email: email,                 // Backup parameter
+                    otp_code: otp,
+                    username: username,
+                    from_name: "Verdict AI"
+                };
+
+                console.log('Sending OTP email with params:', templateParams);
+
+                const response = await emailjs.send(
+                    EMAILJS_CONFIG.SERVICE_ID,
+                    EMAILJS_CONFIG.OTP_TEMPLATE_ID, // Using your OTP template ID
+                    templateParams
+                );
+
+                console.log('OTP email sent successfully:', response);
+                showOTPVerification();
+                showMessage(otpMessage, 'OTP sent to your email successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Full error details:', error);
+                let errorMessage = 'Failed to send OTP. ';
+                
+                if (error.text && error.text.includes('422')) {
+                    errorMessage += 'Email parameter issue. Check recipient address.';
+                } else if (error.text) {
+                    errorMessage += error.text;
+                } else {
+                    errorMessage += 'Please try again.';
+                }
+                
+                showMessage(authMessage, errorMessage, 'error');
+            }
+        }
+        
         // Show OTP verification
         function showOTPVerification() {
             loginBox.classList.add('hidden');
@@ -968,41 +1140,8 @@
             forgotPasswordBox.classList.add('hidden');
             otpBox.classList.remove('hidden');
             
-            // Clear OTP inputs
-            document.querySelectorAll('.otp-input').forEach(input => {
-                input.value = '';
-            });
-            
-            // Focus first OTP input
-            document.querySelector('.otp-input').focus();
-        }
-        
-        // Move to next OTP input
-        function moveToNext(current, nextIndex) {
-            if (current.value.length === 1) {
-                if (nextIndex <= 6) {
-                    const nextInput = document.querySelectorAll('.otp-input')[nextIndex - 1];
-                    if (nextInput) {
-                        nextInput.focus();
-                    }
-                }
-            }
-        }
-        
-        // Handle backspace in OTP inputs
-        function handleOTPBackspace(event, currentIndex) {
-            if (event.key === 'Backspace') {
-                const inputs = document.querySelectorAll('.otp-input');
-                if (inputs[currentIndex].value === '') {
-                    // If current input is empty, move to previous
-                    if (currentIndex > 0) {
-                        inputs[currentIndex - 1].focus();
-                    }
-                } else {
-                    // If current input has value, clear it
-                    inputs[currentIndex].value = '';
-                }
-            }
+            // Clear OTP inputs and focus first one
+            clearOTPInputs();
         }
         
         // Verify OTP
@@ -1031,16 +1170,8 @@
         // Resend OTP
         function resendOTP() {
             generatedOTP = generateOTP();
-            demoOTP.textContent = generatedOTP;
-            showMessage(otpMessage, 'New OTP generated successfully!', 'success');
-            
-            // Clear OTP inputs
-            document.querySelectorAll('.otp-input').forEach(input => {
-                input.value = '';
-            });
-            
-            // Focus first OTP input
-            document.querySelector('.otp-input').focus();
+            sendOTPToEmail(userEmail, generatedOTP, currentUser);
+            clearOTPInputs();
         }
         
         // Logout function
@@ -1109,11 +1240,71 @@
             }
             
             if (userFound) {
-                // In a real application, you would send an email here
-                // For this demo, we'll just show a message
-                showMessage(forgotMessage, `Password reset instructions have been sent to ${email}. Your username is: ${username}`, 'success');
+                // Generate temporary password
+                const tempPassword = generateTempPassword();
+                
+                // Update user's password
+                const userData = JSON.parse(localStorage.getItem('user_' + username));
+                userData.password = tempPassword;
+                localStorage.setItem('user_' + username, JSON.stringify(userData));
+                
+                // Send password reset email
+                sendPasswordResetEmail(email, tempPassword, username);
             } else {
                 showMessage(forgotMessage, 'No account found with that email address', 'error');
+            }
+        }
+        
+        // Generate temporary password
+        function generateTempPassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < 8; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+        
+        // Send password reset email
+        async function sendPasswordResetEmail(email, tempPassword, username) {
+            try {
+                // Show loading state
+                showMessage(forgotMessage, 'Sending password reset instructions...', 'info');
+                
+                // ✅ WORKING PARAMETER STRUCTURE
+                const templateParams = {
+                    email: email,                    // Main parameter
+                    user_email: email,               // Alternative
+                    to_email: email,                 // Backup
+                    temp_password: tempPassword,
+                    username: username,
+                    from_name: "Verdict AI Support"
+                };
+
+                console.log('Sending password reset email with params:', templateParams);
+
+                const response = await emailjs.send(
+                    EMAILJS_CONFIG.SERVICE_ID,
+                    EMAILJS_CONFIG.PASSWORD_RESET_TEMPLATE_ID, // Using your password reset template ID
+                    templateParams
+                );
+
+                console.log('Password reset email sent successfully:', response);
+                showMessage(forgotMessage, `Password reset instructions sent to ${email}. Check your email for temporary password.`, 'success');
+                
+            } catch (error) {
+                console.error('Error sending password reset email:', error);
+                let errorMessage = 'Failed to send password reset email. ';
+                
+                if (error.text && error.text.includes('422')) {
+                    errorMessage += 'Email parameter issue. Check recipient address.';
+                } else if (error.text) {
+                    errorMessage += error.text;
+                } else {
+                    errorMessage += 'Please try again.';
+                }
+                
+                showMessage(forgotMessage, errorMessage, 'error');
             }
         }
         
