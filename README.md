@@ -1,1 +1,1345 @@
-# verdict-ai
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verdict AI - Legal Advisor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1a365d;
+            --secondary: #2d4a72;
+            --accent1: #8b4513;
+            --accent2: #d4af37;
+            --light: #f8f9fa;
+            --dark: #1a202c;
+            --success: #38a169;
+            --warning: #d69e2e;
+            --danger: #e53e3e;
+            --background: #edf2f7;
+            --card-bg: #ffffff;
+            --text: #2d3748;
+            --text-secondary: #718096;
+            
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        .theme-judiciary {
+            --primary: #1a365d;
+            --secondary: #2d4a72;
+            --accent1: #8b4513;
+            --accent2: #d4af37;
+        }
+
+        .theme-modern {
+            --primary: #4a5568;
+            --secondary: #718096;
+            --accent1: #2b6cb0;
+            --accent2: #4299e1;
+        }
+
+        .theme-classic {
+            --primary: #2d3748;
+            --secondary: #4a5568;
+            --accent1: #744210;
+            --accent2: #d69e2e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background: var(--background);
+            color: var(--text);
+            transition: var(--transition);
+        }
+
+        .judiciary-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, var(--background) 0%, #e2e8f0 100%);
+            z-index: -1;
+        }
+
+        .judiciary-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%231a365d' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        /* Login Screen */
+        .login-container {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            background: var(--background);
+        }
+
+        .login-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 40px;
+            width: 420px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-logo {
+            margin-bottom: 30px;
+        }
+
+        .login-logo-icon {
+            font-size: 45px;
+            color: var(--accent1);
+            margin-bottom: 16px;
+        }
+
+        .login-logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary), var(--accent1));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #e1e4e8;
+            border-radius: var(--border-radius);
+            font-size: 15px;
+            background-color: var(--light);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--accent1);
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.2);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: var(--border-radius);
+            border: 1px solid #e1e4e8;
+            background-color: var(--light);
+            color: var(--text);
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .otp-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .otp-input {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            height: 50px;
+        }
+
+        .otp-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin: 15px 0;
+            border-left: 4px solid var(--accent1);
+        }
+
+        .otp-display h4 {
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .otp-code {
+            font-family: monospace;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent1);
+            letter-spacing: 5px;
+        }
+
+        button {
+            padding: 16px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border-radius: var(--border-radius);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn-accent {
+            background-color: var(--accent1);
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-accent:hover {
+            background-color: #a0522d;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #3c5a82;
+        }
+
+        .logout-button {
+            background-color: var(--danger);
+            margin-bottom: 20px;
+        }
+
+        .warning-button {
+            background-color: var(--warning);
+            color: var(--dark);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-buttons button {
+            width: auto;
+            flex: 1;
+        }
+
+        .save-load-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .save-load-container button {
+            flex: 1;
+        }
+
+        /* App Container */
+        .app-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .app-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .theme-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: var(--transition);
+        }
+
+        .theme-option:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-option.active {
+            border-color: white;
+        }
+
+        .theme-judiciary-option {
+            background: linear-gradient(45deg, #1a365d, #8b4513);
+        }
+
+        .theme-modern-option {
+            background: linear-gradient(45deg, #4a5568, #2b6cb0);
+        }
+
+        .theme-classic-option {
+            background: linear-gradient(45deg, #2d3748, #744210);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .user-profile:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--accent1), var(--accent2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            width: 100%;
+            margin: 20px auto;
+            box-shadow: var(--box-shadow);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            background: linear-gradient(90deg, var(--primary), var(--accent1));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e1e4e8;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            border: 1px solid #aaa;
+            font-size: 16px;
+            margin-bottom: 15px;
+            resize: vertical;
+        }
+
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: var(--border-radius);
+            white-space: pre-wrap;
+            border-left: 4px solid var(--accent1);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            border-left: 4px solid var(--accent1);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 24px;
+            background-color: var(--accent1);
+            color: white;
+        }
+
+        .card-title {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .card-change {
+            font-size: 14px;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e1e4e8;
+            padding-bottom: 16px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: var(--light);
+        }
+
+        .tab.active {
+            background-color: var(--accent1);
+            color: white;
+        }
+
+        /* Screen containers */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Messages */
+        .hidden {
+            display: none;
+        }
+
+        p {
+            cursor: pointer;
+            color: var(--primary);
+            margin-top: 15px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        p:hover {
+            text-decoration: underline;
+        }
+
+        .message {
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(218, 168, 168, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent2);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(139, 69, 19, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(139, 69, 19, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(139, 69, 19, 0); }
+        }
+
+        /* Forgot password */
+        .forgot-password {
+            text-align: center;
+            margin-top: 15px;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .action-buttons {
+                flex-direction: column;
+            }
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .app-header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            .header-left, .header-right {
+                width: 100%;
+                justify-content: center;
+            }
+            .otp-container {
+                gap: 5px;
+            }
+            .otp-input {
+                height: 45px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body class="theme-judiciary">
+    <div class="judiciary-bg"></div>
+    <div class="judiciary-pattern"></div>
+
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo">
+                <div class="login-logo-icon"><i class="fas fa-balance-scale"></i></div>
+                <div class="login-logo-text">Verdict AI</div>
+            </div>
+            
+            <!-- Signup Form -->
+            <div id="signupBox">
+                <div class="form-group">
+                    <input type="text" id="signupUsername" class="form-input" placeholder="Choose a username" required />
+                </div>
+                <div class="form-group">
+                    <input type="password" id="signupPassword" class="form-input" placeholder="Choose a password" required />
+                </div>
+                <div class="form-group">
+                    <input type="email" id="signupEmail" class="form-input" placeholder="Email address (for password recovery)" required />
+                </div>
+                <button onclick="createAccount()" class="btn btn-primary">Create Account</button>
+                <p id="signupMessage" class="message"></p>
+                <p onclick="showLogin()">Already have an account? Login</p>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginBox" class="hidden">
+                <div class="form-group">
+                    <input type="text" id="loginUsername" class="form-input" placeholder="Username" required />
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" class="form-input" placeholder="Password" required />
+                </div>
+                <button onclick="login()" class="btn btn-primary">Login</button>
+                <p id="authMessage" class="message"></p>
+                <p onclick="showSignup()">Don't have an account? Create one</p>
+                <p class="forgot-password" onclick="showForgotPassword()">Forgot your password?</p>
+            </div>
+
+            <!-- OTP Verification Form -->
+            <div id="otpBox" class="hidden">
+                <div class="form-group">
+                    <p>We've sent a verification code to your email</p>
+                    <div class="otp-display">
+                        <h4>Demo OTP (In a real app, this would be sent to your email):</h4>
+                        <div class="otp-code" id="demoOTP">123456</div>
+                    </div>
+                    <p>Enter the 6-digit verification code:</p>
+                    <div class="otp-container">
+                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 1)" onkeydown="handleOTPBackspace(event, 0)">
+                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 2)" onkeydown="handleOTPBackspace(event, 1)">
+                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 3)" onkeydown="handleOTPBackspace(event, 2)">
+                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 4)" onkeydown="handleOTPBackspace(event, 3)">
+                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 5)" onkeydown="handleOTPBackspace(event, 4)">
+                        <input type="text" class="otp-input" maxlength="1" oninput="moveToNext(this, 6)" onkeydown="handleOTPBackspace(event, 5)">
+                    </div>
+                </div>
+                <button onclick="verifyOTP()" class="btn btn-primary">Verify OTP</button>
+                <p id="otpMessage" class="message"></p>
+                <p onclick="resendOTP()">Resend OTP</p>
+                <p onclick="showLogin()">Back to login</p>
+            </div>
+
+            <!-- Forgot Password Form -->
+            <div id="forgotPasswordBox" class="hidden">
+                <div class="form-group">
+                    <input type="email" id="forgotEmail" class="form-input" placeholder="Enter your email address" required />
+                </div>
+                <button onclick="resetPassword()" class="btn btn-primary">Reset Password</button>
+                <p id="forgotMessage" class="message"></p>
+                <p onclick="showLogin()">Back to login</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container (hidden until login) -->
+    <div class="app-container" id="appContainer">
+        <!-- Header -->
+        <div class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <i class="fas fa-balance-scale"></i>
+                    <span>Verdict AI</span>
+                </div>
+                <div class="theme-selector">
+                    <div class="theme-option theme-judiciary-option active" onclick="changeTheme('judiciary')"></div>
+                    <div class="theme-option theme-modern-option" onclick="changeTheme('modern')"></div>
+                    <div class="theme-option theme-classic-option" onclick="changeTheme('classic')"></div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="user-profile">
+                    <div class="avatar" id="userAvatar">AD</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">Admin User</div>
+                        <div class="user-role" id="userRole">Legal Advisor</div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Dashboard Screen -->
+            <div class="screen active" id="dashboardScreen">
+                <div class="container">
+                    <h1><i class="fas fa-gavel"></i> Legal Advisor Dashboard</h1>
+                    
+                    <!-- Stats Cards -->
+                    <div class="dashboard-grid">
+                        <div class="card stat-card">
+                            <div class="card-icon"><i class="fas fa-balance-scale"></i></div>
+                            <div class="card-title">Cases Analyzed</div>
+                            <div class="card-value">142</div>
+                            <div class="card-change"><i class="fas fa-arrow-up"></i> 12 this week</div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="card-icon"><i class="fas fa-book"></i></div>
+                            <div class="card-title">Legal Precedents</div>
+                            <div class="card-value">2,847</div>
+                            <div class="card-change"><i class="fas fa-arrow-up"></i> 5% from last month</div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="card-icon"><i class="fas fa-user-tie"></i></div>
+                            <div class="card-title">Active Clients</div>
+                            <div class="card-value">68</div>
+                            <div class="card-change"><i class="fas fa-arrow-right"></i> No change</div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="card-title">Success Rate</div>
+                            <div class="card-value">87%</div>
+                            <div class="card-change"><i class="fas fa-arrow-up"></i> 3% improvement</div>
+                        </div>
+                    </div>
+
+                    <!-- AI Legal Advisor Section -->
+                    <div class="card">
+                        <h2><i class="fas fa-robot"></i> AI Legal Advisor</h2>
+                        <p>Describe your legal case below to receive structured guidance on evidence collection and legal strategy.</p>
+                        
+                        <textarea id="userInput" placeholder="Describe your case details, including parties involved, timeline, evidence available, and specific legal questions..."></textarea>
+                        <button onclick="askAI()"><i class="fas fa-gavel"></i> Get Legal Advice</button>
+                        
+                        <div id="response" class="response"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case History Screen -->
+            <div class="screen" id="historyScreen">
+                <div class="container">
+                    <h1><i class="fas fa-history"></i> Case History</h1>
+                    
+                    <div class="card">
+                        <div class="tabs">
+                            <div class="tab active" onclick="changeCaseView('all')">All Cases</div>
+                            <div class="tab" onclick="changeCaseView('criminal')">Criminal Law</div>
+                            <div class="tab" onclick="changeCaseView('civil')">Civil Law</div>
+                            <div class="tab" onclick="changeCaseView('corporate')">Corporate Law</div>
+                        </div>
+                        
+                        <div id="caseHistoryContainer">
+                            <!-- Case history will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resources Screen -->
+            <div class="screen" id="resourcesScreen">
+                <div class="container">
+                    <h1><i class="fas fa-book-open"></i> Legal Resources</h1>
+                    
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-icon"><i class="fas fa-scale-balanced"></i></div>
+                            <div class="card-title">Constitutional Law</div>
+                            <div class="card-value">42 Docs</div>
+                            <button class="btn btn-primary" style="margin-top: 15px;" onclick="showScreen('dashboardScreen')">Browse</button>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon"><i class="fas fa-handcuffs"></i></div>
+                            <div class="card-title">Criminal Law</div>
+                            <div class="card-value">128 Docs</div>
+                            <button class="btn btn-primary" style="margin-top: 15px;" onclick="showScreen('dashboardScreen')">Browse</button>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon"><i class="fas fa-briefcase"></i></div>
+                            <div class="card-title">Corporate Law</div>
+                            <div class="card-value">76 Docs</div>
+                            <button class="btn btn-primary" style="margin-top: 15px;" onclick="showScreen('dashboardScreen')">Browse</button>
+                        </div>
+                        <div class="card">
+                            <div class="card-icon"><i class="fas fa-home"></i></div>
+                            <div class="card-title">Property Law</div>
+                            <div class="card-value">54 Docs</div>
+                            <button class="btn btn-primary" style="margin-top: 15px;" onclick="showScreen('dashboardScreen')">Browse</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // -------- GLOBAL VARIABLES --------
+        const API_KEY = "AIzaSyCUxUuVG4OvuHXhC6U6Uj2RbJIdWRUiL9U";
+        const MODEL = "models/gemini-2.0-flash";
+        
+        let currentUser = null;
+        let generatedOTP = null;
+
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const appContainer = document.getElementById('appContainer');
+        const signupBox = document.getElementById('signupBox');
+        const loginBox = document.getElementById('loginBox');
+        const otpBox = document.getElementById('otpBox');
+        const forgotPasswordBox = document.getElementById('forgotPasswordBox');
+        const signupMessage = document.getElementById('signupMessage');
+        const authMessage = document.getElementById('authMessage');
+        const otpMessage = document.getElementById('otpMessage');
+        const forgotMessage = document.getElementById('forgotMessage');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        const userRole = document.getElementById('userRole');
+        const screens = document.querySelectorAll('.screen');
+        const caseHistoryContainer = document.getElementById('caseHistoryContainer');
+        const demoOTP = document.getElementById('demoOTP');
+
+        // Check if user is logged in
+        if (localStorage.getItem('loggedInUser')) {
+            showApp();
+        }
+        
+        // Create account function
+        function createAccount() {
+            const username = document.getElementById('signupUsername').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            
+            if (!username || !password || !email) {
+                showMessage(signupMessage, 'Please fill all fields', 'error');
+                return;
+            }
+            
+            if (localStorage.getItem('user_' + username)) {
+                showMessage(signupMessage, 'Username already exists!', 'error');
+            } else {
+                // Store user data with email for password recovery
+                localStorage.setItem('user_' + username, JSON.stringify({
+                    password: password,
+                    email: email,
+                    cases: []
+                }));
+                showMessage(signupMessage, 'Account created successfully! Please login.', 'success');
+                document.getElementById('signupUsername').value = '';
+                document.getElementById('signupPassword').value = '';
+                document.getElementById('signupEmail').value = '';
+                showLogin();
+            }
+        }
+        
+        // Login function
+        function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const userData = localStorage.getItem('user_' + username);
+            
+            if (!username || !password) {
+                showMessage(authMessage, 'Please fill all fields', 'error');
+                return;
+            }
+            
+            if (userData) {
+                const user = JSON.parse(userData);
+                if (user.password === password) {
+                    // Generate and send OTP (simulated)
+                    generatedOTP = generateOTP();
+                    currentUser = username;
+                    
+                    // Display OTP for demo purposes
+                    demoOTP.textContent = generatedOTP;
+                    
+                    // Show OTP verification screen
+                    showOTPVerification();
+                } else {
+                    showMessage(authMessage, 'Invalid username or password!', 'error');
+                }
+            } else {
+                showMessage(authMessage, 'Invalid username or password!', 'error');
+            }
+        }
+        
+        // Generate OTP
+        function generateOTP() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+        
+        // Show OTP verification
+        function showOTPVerification() {
+            loginBox.classList.add('hidden');
+            signupBox.classList.add('hidden');
+            forgotPasswordBox.classList.add('hidden');
+            otpBox.classList.remove('hidden');
+            
+            // Clear OTP inputs
+            document.querySelectorAll('.otp-input').forEach(input => {
+                input.value = '';
+            });
+            
+            // Focus first OTP input
+            document.querySelector('.otp-input').focus();
+        }
+        
+        // Move to next OTP input
+        function moveToNext(current, nextIndex) {
+            if (current.value.length === 1) {
+                if (nextIndex <= 6) {
+                    const nextInput = document.querySelectorAll('.otp-input')[nextIndex - 1];
+                    if (nextInput) {
+                        nextInput.focus();
+                    }
+                }
+            }
+        }
+        
+        // Handle backspace in OTP inputs
+        function handleOTPBackspace(event, currentIndex) {
+            if (event.key === 'Backspace') {
+                const inputs = document.querySelectorAll('.otp-input');
+                if (inputs[currentIndex].value === '') {
+                    // If current input is empty, move to previous
+                    if (currentIndex > 0) {
+                        inputs[currentIndex - 1].focus();
+                    }
+                } else {
+                    // If current input has value, clear it
+                    inputs[currentIndex].value = '';
+                }
+            }
+        }
+        
+        // Verify OTP
+        function verifyOTP() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            let enteredOTP = '';
+            
+            otpInputs.forEach(input => {
+                enteredOTP += input.value;
+            });
+            
+            if (enteredOTP.length !== 6) {
+                showMessage(otpMessage, 'Please enter the complete OTP', 'error');
+                return;
+            }
+            
+            if (enteredOTP === generatedOTP) {
+                localStorage.setItem('loggedInUser', currentUser);
+                showApp();
+                showNotification(`Welcome back, ${currentUser}!`);
+            } else {
+                showMessage(otpMessage, 'Invalid OTP. Please try again.', 'error');
+            }
+        }
+        
+        // Resend OTP
+        function resendOTP() {
+            generatedOTP = generateOTP();
+            demoOTP.textContent = generatedOTP;
+            showMessage(otpMessage, 'New OTP generated successfully!', 'success');
+            
+            // Clear OTP inputs
+            document.querySelectorAll('.otp-input').forEach(input => {
+                input.value = '';
+            });
+            
+            // Focus first OTP input
+            document.querySelector('.otp-input').focus();
+        }
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('loggedInUser');
+            appContainer.style.display = 'none';
+            loginScreen.style.display = 'flex';
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            authMessage.textContent = '';
+            showLogin();
+            showNotification('You have been logged out');
+        }
+        
+        // Show signup form
+        function showSignup() {
+            loginBox.classList.add('hidden');
+            otpBox.classList.add('hidden');
+            forgotPasswordBox.classList.add('hidden');
+            signupBox.classList.remove('hidden');
+            authMessage.textContent = '';
+        }
+        
+        // Show login form
+        function showLogin() {
+            signupBox.classList.add('hidden');
+            otpBox.classList.add('hidden');
+            forgotPasswordBox.classList.add('hidden');
+            loginBox.classList.remove('hidden');
+            signupMessage.textContent = '';
+            otpMessage.textContent = '';
+            forgotMessage.textContent = '';
+        }
+
+        // Show forgot password form
+        function showForgotPassword() {
+            loginBox.classList.add('hidden');
+            signupBox.classList.add('hidden');
+            otpBox.classList.add('hidden');
+            forgotPasswordBox.classList.remove('hidden');
+        }
+
+        // Reset password function
+        function resetPassword() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            
+            if (!email) {
+                showMessage(forgotMessage, 'Please enter your email address', 'error');
+                return;
+            }
+            
+            // Find user by email
+            let userFound = false;
+            let username = '';
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('user_')) {
+                    const userData = JSON.parse(localStorage.getItem(key));
+                    if (userData.email === email) {
+                        userFound = true;
+                        username = key.substring(5); // Remove 'user_' prefix
+                        break;
+                    }
+                }
+            }
+            
+            if (userFound) {
+                // In a real application, you would send an email here
+                // For this demo, we'll just show a message
+                showMessage(forgotMessage, `Password reset instructions have been sent to ${email}. Your username is: ${username}`, 'success');
+            } else {
+                showMessage(forgotMessage, 'No account found with that email address', 'error');
+            }
+        }
+        
+        // Show app after login
+        function showApp() {
+            loginScreen.style.display = 'none';
+            appContainer.style.display = 'block';
+            
+            // Set user info
+            const username = localStorage.getItem('loggedInUser');
+            userName.textContent = username;
+            userAvatar.textContent = username.charAt(0).toUpperCase();
+            userRole.textContent = 'Legal Advisor';
+            
+            // Load case history
+            loadCaseHistory();
+        }
+
+        // Change theme
+        function changeTheme(theme) {
+            document.body.className = `theme-${theme}`;
+            
+            // Update active theme indicator
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            document.querySelector(`.theme-${theme}-option`).classList.add('active');
+            
+            // Save theme preference
+            localStorage.setItem('theme', theme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'judiciary';
+        changeTheme(savedTheme);
+
+        // Load case history
+        function loadCaseHistory() {
+            const username = localStorage.getItem('loggedInUser');
+            if (!username) return;
+            
+            const userData = JSON.parse(localStorage.getItem('user_' + username) || '{}');
+            const cases = userData.cases || [];
+            
+            let caseHTML = '';
+            
+            if (cases.length === 0) {
+                caseHTML = '<div class="message info">No case history yet. Use the AI Legal Advisor to analyze your first case.</div>';
+            } else {
+                cases.forEach((caseItem, index) => {
+                    caseHTML += `
+                        <div class="card" style="margin-bottom: 15px;">
+                            <h3>Case #${index + 1}: ${caseItem.type || 'Legal Consultation'}</h3>
+                            <p><strong>Date:</strong> ${caseItem.date || 'Unknown'}</p>
+                            <p><strong>Summary:</strong> ${caseItem.summary || 'No summary available'}</p>
+                            <button class="btn btn-primary" onclick="viewCaseDetails(${index})">View Details</button>
+                        </div>
+                    `;
+                });
+            }
+            
+            caseHistoryContainer.innerHTML = caseHTML;
+        }
+
+        // Change case view
+        function changeCaseView(view) {
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // In a real app, you would filter cases by type
+            // For this demo, we'll just reload all cases
+            loadCaseHistory();
+        }
+
+        // View case details
+        function viewCaseDetails(index) {
+            const username = localStorage.getItem('loggedInUser');
+            const userData = JSON.parse(localStorage.getItem('user_' + username) || '{}');
+            const cases = userData.cases || [];
+            
+            if (cases[index]) {
+                const caseItem = cases[index];
+                alert(`Case Details:\n\nType: ${caseItem.type || 'Unknown'}\nDate: ${caseItem.date || 'Unknown'}\nSummary: ${caseItem.summary || 'No summary'}\n\nFull Analysis:\n${caseItem.analysis || 'No analysis available'}`);
+            }
+        }
+
+        // AI Legal Advisor function
+        async function askAI() {
+            const input = document.getElementById("userInput").value.trim();
+            const box = document.getElementById("response");
+            if (!input) {
+                box.textContent = "Please enter your case details.";
+                return;
+            }
+            box.textContent = "Analyzing your case...";
+
+            try {
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1/${MODEL}:generateContent?key=${API_KEY}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [
+                                {
+                                    parts: [
+                                        { text: "You are a professional legal advisor. Provide structured, safe legal guidance for:\n\n" + input }
+                                    ]
+                                }
+                            ]
+                        })
+                    }
+                );
+                const data = await response.json();
+                if (data.error) {
+                    box.textContent = "API Error: " + data.error.message;
+                    return;
+                }
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                box.textContent = aiText || "No response from AI.";
+                
+                // Save case to history
+                saveCaseToHistory(input, aiText);
+            } catch (err) {
+                console.error("Network / Fetch Error:", err);
+                box.textContent = "Network error. Please try again.";
+            }
+        }
+
+        // Save case to history
+        function saveCaseToHistory(input, analysis) {
+            const username = localStorage.getItem('loggedInUser');
+            if (!username) return;
+            
+            const userData = JSON.parse(localStorage.getItem('user_' + username) || '{}');
+            if (!userData.cases) {
+                userData.cases = [];
+            }
+            
+            // Extract a summary from the input (first 100 chars)
+            const summary = input.length > 100 ? input.substring(0, 100) + '...' : input;
+            
+            // Try to determine case type from input
+            let caseType = 'Legal Consultation';
+            if (input.toLowerCase().includes('criminal') || input.toLowerCase().includes('arrest') || input.toLowerCase().includes('charge')) {
+                caseType = 'Criminal Law';
+            } else if (input.toLowerCase().includes('contract') || input.toLowerCase().includes('agreement') || input.toLowerCase().includes('business')) {
+                caseType = 'Corporate Law';
+            } else if (input.toLowerCase().includes('property') || input.toLowerCase().includes('real estate') || input.toLowerCase().includes('land')) {
+                caseType = 'Property Law';
+            } else if (input.toLowerCase().includes('divorce') || input.toLowerCase().includes('family') || input.toLowerCase().includes('child')) {
+                caseType = 'Family Law';
+            }
+            
+            userData.cases.push({
+                type: caseType,
+                date: new Date().toLocaleDateString(),
+                summary: summary,
+                analysis: analysis
+            });
+            
+            localStorage.setItem('user_' + username, JSON.stringify(userData));
+            
+            // If we're on the history screen, refresh it
+            if (document.getElementById('historyScreen').classList.contains('active')) {
+                loadCaseHistory();
+            }
+        }
+
+        // Navigation
+        function showScreen(screenId) {
+            screens.forEach(screen => screen.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Show message function
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `message ${type}`;
+            
+            // Remove message after 3 seconds
+            setTimeout(() => {
+                element.textContent = '';
+                element.className = 'message';
+            }, 3000);
+        }
+
+        // Show notification
+        function showNotification(message, isError = false) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.right = '20px';
+            notification.style.backgroundColor = isError ? '#e53e3e' : '#38a169';
+            notification.style.color = 'white';
+            notification.style.padding = '12px 24px';
+            notification.style.borderRadius = '6px';
+            notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            notification.style.zIndex = '1000';
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(20px)';
+            notification.style.transition = 'all 0.3s ease';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateY(0)';
+            }, 10);
+            
+            // Animate out and remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Initialize with login form shown
+        showLogin();
+    </script>
+</body>
+</html>
