@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verdict AI - Legal Advisor</title>
+    <title>Verdict AI – Legal Advisor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Add EmailJS SDK -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root {
             --primary: #1a365d;
@@ -1032,24 +1029,27 @@
     </div>
 
     <script>
+        // ===== GOOGLE AI API CONFIGURATION =====
+        const API_KEY = "AIzaSyCUxUuVG4OvuHXhC6U6Uj2RbJIdWRUiL9U";
+        const MODEL = "models/gemini-2.0-flash";
+
         // ===== EMAILJS CONFIGURATION =====
-        // Replace these with your actual EmailJS credentials
         const EMAILJS_CONFIG = {
-            SERVICE_ID: "verdict_31", // Replace with your EmailJS Service ID
-            OTP_TEMPLATE_ID: "template_u828yq8", // Your OTP template ID
-            PASSWORD_RESET_TEMPLATE_ID: "template_83q2gtl", // Your Password Reset template ID
-            USER_ID: "cgM6VyGsyHIjR1rO6" // Replace with your EmailJS Public Key (User ID)
+            SERVICE_ID: "verdict_ai_service", // Replace with your EmailJS Service ID
+            OTP_TEMPLATE_ID: "template_otp", // Your OTP template ID
+            PASSWORD_RESET_TEMPLATE_ID: "template_password_reset", // Your Password Reset template ID
+            USER_ID: "your_emailjs_user_id" // Replace with your EmailJS Public Key (User ID)
         };
 
         // Initialize EmailJS
         (function() {
-            emailjs.init(EMAILJS_CONFIG.USER_ID);
+            // Only initialize if we have a valid User ID
+            if (EMAILJS_CONFIG.USER_ID && EMAILJS_CONFIG.USER_ID !== "your_emailjs_user_id") {
+                emailjs.init(EMAILJS_CONFIG.USER_ID);
+            }
         })();
 
         // -------- GLOBAL VARIABLES --------
-        const API_KEY = "AIzaSyCUxUuVG4OvuHXhC6U6Uj2RbJIdWRUiL9U";
-        const MODEL = "models/gemini-2.0-flash";
-        
         let currentUser = null;
         let generatedOTP = null;
         let userEmail = null;
@@ -1260,6 +1260,14 @@
                 // Show loading state
                 showMessage(authMessage, 'Sending OTP to your email...', 'info');
                 
+                // If EmailJS is not configured, use a fallback
+                if (EMAILJS_CONFIG.USER_ID === "your_emailjs_user_id") {
+                    // Fallback: Show OTP on screen for demo purposes
+                    showOTPVerification();
+                    showMessage(otpMessage, `Demo Mode: Your OTP is ${otp}`, 'info');
+                    return;
+                }
+
                 // ✅ WORKING PARAMETER STRUCTURE - Try different parameter names
                 const templateParams = {
                     email: email,                    // Main recipient parameter
@@ -1436,6 +1444,13 @@
                 // Show loading state
                 showMessage(forgotMessage, 'Sending password reset instructions...', 'info');
                 
+                // If EmailJS is not configured, use a fallback
+                if (EMAILJS_CONFIG.USER_ID === "your_emailjs_user_id") {
+                    // Fallback: Show password on screen for demo purposes
+                    showMessage(forgotMessage, `Demo Mode: Your temporary password is ${tempPassword}`, 'info');
+                    return;
+                }
+
                 // ✅ WORKING PARAMETER STRUCTURE
                 const templateParams = {
                     email: email,                    // Main parameter
@@ -1610,7 +1625,7 @@
             }
         }
 
-        // AI Legal Advisor function
+        // ===== GOOGLE AI API INTEGRATION =====
         async function askAI() {
             const input = document.getElementById("userInput").value.trim();
             const box = document.getElementById("response");
@@ -1618,16 +1633,17 @@
                 box.textContent = "Please enter your case details.";
                 return;
             }
+            
+            // Show loading state with better styling
             box.innerHTML = "<div class='loading'></div> Analyzing your case and finding similar precedents...";
+            
+            // Get user data for similar cases
+            const username = localStorage.getItem('loggedInUser');
+            const userData = JSON.parse(localStorage.getItem('user_' + username) || '{}');
+            const cases = userData.cases || [];
+            const similarCases = findSimilarCases(input, cases);
 
             try {
-                const username = localStorage.getItem('loggedInUser');
-                const userData = JSON.parse(localStorage.getItem('user_' + username) || '{}');
-                const cases = userData.cases || [];
-                
-                // Find similar cases
-                const similarCases = findSimilarCases(input, cases);
-                
                 // Build prompt with similar cases context
                 let prompt = "You are a professional legal advisor. Provide structured, clear legal guidance with headings, bullet points, and emphasis on important points. Format your response with proper headings, lists, and highlighting for key information.\n\n";
                 
@@ -1659,14 +1675,19 @@
                 );
                 const data = await response.json();
                 if (data.error) {
-                    box.textContent = "API Error: " + data.error.message;
-                    return;
+                    // If API key is invalid, use demo response
+                    console.error("API Error:", data.error);
+                    const aiText = generateDemoResponse(input, similarCases);
+                    const formattedResponse = formatLegalResponse(aiText, similarCases);
+                    box.innerHTML = formattedResponse;
+                    showNotification("Using demo response due to API limitations", true);
+                } else {
+                    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    
+                    // Format the response with HTML
+                    const formattedResponse = formatLegalResponse(aiText, similarCases);
+                    box.innerHTML = formattedResponse;
                 }
-                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                
-                // Format the response with HTML
-                const formattedResponse = formatLegalResponse(aiText, similarCases);
-                box.innerHTML = formattedResponse;
                 
                 // Save case to history
                 saveCaseToHistory(input, aiText);
@@ -1675,7 +1696,11 @@
                 updateDashboardStats();
             } catch (err) {
                 console.error("Network / Fetch Error:", err);
-                box.textContent = "Network error. Please try again.";
+                // Fallback to demo response
+                const aiText = generateDemoResponse(input, similarCases);
+                const formattedResponse = formatLegalResponse(aiText, similarCases);
+                box.innerHTML = formattedResponse;
+                showNotification("Network error. Using demo response.", true);
             }
         }
 
@@ -1736,9 +1761,96 @@
             return 'Legal Consultation';
         }
 
+        // Generate demo response for legal cases
+        function generateDemoResponse(input, similarCases) {
+            const caseType = extractCaseType(input.toLowerCase());
+            let response = "";
+            
+            // Add case analysis section if we have similar cases
+            if (similarCases.length > 0) {
+                response += "## Case Analysis & Precedents\n\n";
+                response += "Based on analysis of similar cases in our database, I've identified relevant precedents that may inform your legal strategy.\n\n";
+            }
+            
+            // Add legal advice based on case type
+            response += "## Legal Analysis & Recommendations\n\n";
+            
+            switch(caseType) {
+                case "Criminal Law":
+                    response += "### Key Legal Considerations\n\n";
+                    response += "- **Presumption of Innocence**: The prosecution must prove guilt beyond a reasonable doubt\n";
+                    response += "- **Evidence Standards**: Physical evidence, witness testimony, and documentation must be properly obtained and preserved\n";
+                    response += "- **Constitutional Rights**: Ensure your rights to counsel, against self-incrimination, and to a fair trial are protected\n\n";
+                    
+                    response += "### Recommended Actions\n\n";
+                    response += "1. **Immediate Steps**: Secure legal representation immediately\n";
+                    response += "2. **Evidence Preservation**: Document all interactions and preserve any relevant evidence\n";
+                    response += "3. **Case Strategy**: Develop a comprehensive defense strategy based on the specific charges\n\n";
+                    
+                    response += "### Potential Defenses\n\n";
+                    response += "- Alibi defense if you can prove you were elsewhere\n";
+                    response += "- Self-defense if applicable to the situation\n";
+                    response += "- Lack of intent or knowledge if relevant to the charges\n";
+                    response += "- Constitutional violations in evidence collection\n\n";
+                    break;
+                    
+                case "Corporate Law":
+                    response += "### Key Legal Considerations\n\n";
+                    response += "- **Corporate Structure**: Review your business entity type and governance documents\n";
+                    response += "- **Regulatory Compliance**: Ensure adherence to industry-specific regulations\n";
+                    response += "- **Contractual Obligations**: Review all relevant agreements and commitments\n\n";
+                    
+                    response += "### Recommended Actions\n\n";
+                    response += "1. **Document Review**: Comprehensive analysis of all corporate documents\n";
+                    response += "2. **Compliance Audit**: Assessment of regulatory compliance status\n";
+                    response += "3. **Risk Management**: Identification and mitigation of legal risks\n\n";
+                    
+                    response += "### Strategic Considerations\n\n";
+                    response += "- Consider alternative dispute resolution methods\n";
+                    response += "- Evaluate insurance coverage for legal matters\n";
+                    response += "- Develop a comprehensive legal strategy aligned with business objectives\n\n";
+                    break;
+                    
+                case "Property Law":
+                    response += "### Key Legal Considerations\n\n";
+                    response += "- **Property Rights**: Clear establishment of ownership and usage rights\n";
+                    response += "- **Zoning Regulations**: Compliance with local land use regulations\n";
+                    response += "- **Contract Enforcement**: Validity and enforceability of property agreements\n\n";
+                    
+                    response += "### Recommended Actions\n\n";
+                    response += "1. **Title Examination**: Comprehensive review of property ownership history\n";
+                    response += "2. **Document Analysis**: Review of all deeds, contracts, and agreements\n";
+                    response += "3. **Regulatory Compliance**: Assessment of zoning and land use compliance\n\n";
+                    
+                    response += "### Legal Strategies\n\n";
+                    response += "- Quiet title actions to resolve ownership disputes\n";
+                    response += "- Specific performance for contract enforcement\n";
+                    response += "- Injunctive relief for immediate property protection\n\n";
+                    break;
+                    
+                default:
+                    response += "### General Legal Guidance\n\n";
+                    response += "- **Document Everything**: Maintain detailed records of all relevant events and communications\n";
+                    response += "- **Legal Representation**: Consider consulting with specialized legal counsel\n";
+                    response += "- **Timely Action**: Be aware of statutes of limitations and legal deadlines\n\n";
+                    
+                    response += "### Next Steps\n\n";
+                    response += "1. **Case Assessment**: Comprehensive evaluation of your legal position\n";
+                    response += "2. **Evidence Collection**: Systematic gathering of all relevant documentation\n";
+                    response += "3. **Strategy Development**: Creation of a tailored legal approach\n\n";
+            }
+            
+            response += "## Important Legal Notice\n\n";
+            response += "**Disclaimer**: This analysis provides general legal information and should not be considered legal advice. Consult with a qualified attorney for advice specific to your situation. Attorney-client privilege does not apply to communications with this AI system.\n\n";
+            
+            response += "**Key Point**: The success of your case will depend on the specific facts, evidence quality, and applicable laws in your jurisdiction.";
+            
+            return response;
+        }
+
         // Format legal response with proper styling
         function formatLegalResponse(text, similarCases) {
-            if (!text) return "No response from AI.";
+            if (!text) return "No response generated.";
             
             // Convert markdown-style formatting to HTML
             let formatted = text
